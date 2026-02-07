@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>happie-chaos | GenAI Mentor</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700&family=Fira+Code&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    #cosmos-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="cosmos-canvas"></canvas>
+
+  <div id="app">
+    <nav class="navbar glass-panel">
+      <div class="logo">🌀 <span class="text-gradient">happie-chaos</span></div>
+      <div class="nav-right">
+        <ul class="nav-links">
+          <li><a href="index.html" class="active">Lab</a></li>
+          <li><a href="nav/history/history.html">History</a></li>
+          <li><a href="nav/knowme/knowme.html">Know Me</a></li>
+          <li><a href="nav/learning/learning.html">Learning</a></li>
+          <li><a href="nav/avatar/avatar.html">Avatar</a></li>
+        </ul>
+        <div class="settings-container">
+          <button id="settingsBtn" class="icon-btn" title="AI Settings">⚙️</button>
+          <div id="settingsPanel" class="settings-panel hidden-panel">
+            <h4
+              style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase;">
+              Engine Config</h4>
+            <div class="toggle-group">
+              <span>Pro Mode</span>
+              <label class="switch"><input type="checkbox" id="levelToggle"><span class="slider"></span></label>
+            </div>
+            <div class="toggle-group">
+              <span>Interview</span>
+              <label class="switch"><input type="checkbox" id="interviewToggle"><span
+                  class="slider green"></span></label>
+            </div>
+            <div class="toggle-group">
+              <span>Chaos</span>
+              <label class="switch"><input type="checkbox" id="chaosToggle"><span class="slider pink"></span></label>
+            </div>
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+            <button id="clearHistory" class="danger-link">Reset Memory</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container">
+      <div id="homeView">
+        <header class="hero">
+          <div class="badge">Adaptive Learning Engine</div>
+          <h1>Unlock the Logic Behind<br><span class="text-gradient">Your Code & Ideas</span></h1>
+        </header>
+
+        <section class="input-card glass-panel">
+          <div class="input-wrapper">
+            <textarea id="userInput" placeholder="Paste your code here..." spellcheck="false"></textarea>
+            <div class="input-actions">
+              <div id="moodTag" class="mood-tag hidden">Detected Mood: Thinking</div>
+
+              <div class="quick-toggle-area">
+                <div class="quick-toggle">
+                  <label class="switch-sm">
+                    <input type="checkbox" id="rewriteToggle">
+                    <span class="slider-sm"></span>
+                  </label>
+                  <span class="toggle-label">Rewrite Code</span>
+                </div>
+                <button id="analyzeBtn" class="btn-primary">
+                  <span class="btn-text">Analyze Logic</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="outputArea" class="output-section hidden"></section>
+      </div>
+    </main>
+
+    <div class="background-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById("cosmos-canvas");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      let w, h;
+      const stars = [];
+      const meteors = [];
+      const galaxy = [];
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      for (let i = 0; i < 420; i++) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() * 1.4 + 0.3,
+          a: Math.random(),
+          s: Math.random() * 0.18 + 0.05
+        });
+      }
+
+      for (let i = 0; i < 260; i++) {
+        galaxy.push({
+          angle: Math.random() * Math.PI * 2,
+          radius: Math.random() * 260,
+          speed: 0.00035 + Math.random() * 0.0006,
+          size: Math.random() * 1.2
+        });
+      }
+
+      function spawnMeteor() {
+        meteors.push({
+          x: Math.random() * w,
+          y: Math.random() * h * 0.3,
+          vx: -7 - Math.random() * 5,
+          vy: 5 + Math.random() * 4,
+          life: 0
+        });
+      }
+
+      function drawGalaxy() {
+        ctx.save();
+        ctx.translate(w / 2, h / 2);
+        for (const g of galaxy) {
+          g.angle += g.speed;
+          const x = Math.cos(g.angle) * g.radius;
+          const y = Math.sin(g.angle) * g.radius;
+          ctx.fillStyle = "rgba(180,140,255,0.08)";
+          ctx.beginPath();
+          ctx.arc(x, y, g.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function animate() {
+        ctx.fillStyle = "rgba(3, 3, 8, 0.2)";
+        ctx.fillRect(0, 0, w, h);
+
+        for (const s of stars) {
+          s.a += (Math.random() - 0.5) * 0.02;
+          ctx.globalAlpha = Math.max(0.3, s.a);
+          ctx.fillStyle = "#e6f7ff";
+          ctx.beginPath();
+          ctx.arc(s.x, s.y += s.s, s.r, 0, Math.PI * 2);
+          ctx.fill();
+          if (s.y > h) s.y = 0;
+        }
+
+        ctx.globalAlpha = 1;
+        drawGalaxy();
+
+        if (Math.random() < 0.025) spawnMeteor();
+        meteors.forEach((m, i) => {
+          ctx.strokeStyle = "rgba(200,220,255,0.65)";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(m.x, m.y);
+          ctx.lineTo(m.x - m.vx * 4, m.y - m.vy * 4);
+          ctx.stroke();
+          m.x += m.vx;
+          m.y += m.vy;
+          m.life++;
+          if (m.life > 32) meteors.splice(i, 1);
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
+</body>
+
+</html>
